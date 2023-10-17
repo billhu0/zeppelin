@@ -82,7 +82,7 @@ public class Notebook {
   /**
    * Main constructor \w manual Dependency Injection
    *
-   * @throws IOException
+   * @throws IOException, IllegalArgumentException
    * @throws SchedulerException
    */
   public Notebook(
@@ -94,7 +94,7 @@ public class Notebook {
       InterpreterSettingManager interpreterSettingManager,
       SearchService noteSearchService,
       Credentials credentials)
-      throws IOException {
+      throws IOException, IllegalArgumentException {
     this.conf = conf;
     this.authorizationService = authorizationService;
     this.noteManager = noteManager;
@@ -109,6 +109,10 @@ public class Notebook {
     this.noteEventListeners.add(this.interpreterSettingManager);
 
     if (conf.isIndexRebuild()) {
+      if (noteSearchService == null) {
+        throw new IllegalArgumentException(
+          "noteSearchService was not set when zeppelin.search.index.rebuild is true");
+      }
       noteSearchService.startRebuildIndex(getNoteStream());
     }
   }
@@ -620,6 +624,7 @@ public class Notebook {
   }
 
   public Stream<Note> getNoteStream() {
+    System.out.println("Inside getNoteStream");
     return noteManager.getNotesStream().map(note -> {
       note.setInterpreterFactory(replFactory);
       note.setInterpreterSettingManager(interpreterSettingManager);
